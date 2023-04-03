@@ -3,18 +3,14 @@ const app = express()
 const port = 3000
 const bodyParser = require("body-parser")
 const response = require("./response")
-const { Pool } = require('pg')
 
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'expressjs',
-  password: '1234',
-  port: 5432,
-})
 
 app.use(bodyParser.json())
-
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+)
 
 app.get('/get',(req, res) =>{
   const sql = "select * from persons"
@@ -25,7 +21,14 @@ app.get('/get',(req, res) =>{
 
 
 app.post('/post',(req,res)=>{
-  response(200,"Post","Success",res)
+  const {name,age,address,sex} = req.body
+  const query = 'INSERT INTO users (name,age,address,sex) VALUES ($1, $2, $3, $4) RETURNING *'
+  pool.query(query,[name,age,address,sex],(err,results)=>{
+    if(err){
+      throw err
+    }
+    response(200,`Data added with detail: ${results}`,"Created",res)
+  })
 })
 
 
